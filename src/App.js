@@ -1,69 +1,50 @@
 import "./App.css";
-import React, { useEffect, useState } from "react";
+import React from "react";
+import SimpleRegression from "./SimpleRegression";
+import MultipleRegression from "./MultipleRegression";
+import { Link, BrowserRouter as Router, Route, Switch } from "react-router-dom";
 
 const App = () => {
-  const [valueTable, setValueTable] = useState([
-    {
-      xColumn: "0",
-      yColumn: "0",
-    },
-  ]);
-
-  const handleAddRow = () => {
-    const newRow = { xColumn: "0", yColumn: "0" };
-    setValueTable([...valueTable, newRow]);
-  };
-
-  const handleDeleteRow = () => {
-    const _copiedValueTable = [...valueTable];
-    _copiedValueTable.pop();
-    setValueTable(_copiedValueTable);
-  };
-
-  const handleChangeInputValue = (index, key) => (e) => {
-    const newTable = [...valueTable];
-    newTable[index] = {
-      ...valueTable,
-      [key]: e.target.value,
-    };
-    setValueTable(newTable);
-  };
-
-  var t = valueTable.map((value, index) => {
+  var rootPath = "/statistics_practice";
+  var top = () => {
     return (
-      <tr key={index}>
-        <td>{index + 1}</td>
-        <td>
-          <input
-            onChange={handleChangeInputValue(index, "xColumn")}
-            value={value.xColumn}
-          />
-        </td>
-        <td>
-          <input
-            onChange={handleChangeInputValue(index, "yColumn")}
-            value={value.yColumn}
-          />
-        </td>
-      </tr>
+      <div>
+        統計処理の練習ページ
+        <p>
+          <Link to={rootPath + "/simpleregression"}>単回帰分析</Link>
+        </p>
+        <p>
+          <Link to={rootPath + "/multipleregression"}>重回帰分析</Link>
+        </p>
+      </div>
     );
-  });
+  };
+  var simple = () => {
+    return (
+      <div>
+        <SimpleRegression />
+        <Link to={rootPath + "/"}>トップへ</Link>
+      </div>
+    );
+  };
+
+  var multiple = () => {
+    return (
+      <div>
+        <MultipleRegression />
+        <Link to={rootPath + "/"}>トップへ</Link>
+      </div>
+    );
+  };
 
   return (
-    <div>
-      <table>
-        <thead>
-          <tr>
-            <td>{"No."}</td>
-            <td>{"x"}</td>
-            <td>{"y"}</td>
-          </tr>
-        </thead>
-        <tbody>{t}</tbody>
-      </table>
-      <button onClick={() => handleAddRow()}>Add</button>
-      <button onClick={() => handleDeleteRow()}>Delete</button>
-    </div>
+    <Router>
+      <Switch>
+        <Route exact path={rootPath + "/"} component={top} />
+        <Route exact path={rootPath + "/simpleregression"} component={simple} />
+        <Route exact path={rootPath + "/multipleregression"} component={multiple} />
+      </Switch>
+    </Router>
   );
 };
 
