@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import { DataGrid } from "@material-ui/data-grid";
+
 var FileData = null;
+const HeaderHeight = 56;
+const RowHeight = 52;
 
 const DataToArraySeparatedNewLine = (data) => {
   return data.split("\n");
@@ -89,8 +92,13 @@ const MultipleRegression = () => {
         <input type="file" onChange={handleFiles()} />
       </p>
       {FileData !== null && (
-        <div style={{ height: 400, width: "100%" }}>
-          <DataGrid rows={gridDatas.rows} columns={gridDatas.columns} pageSize={5} />
+        <div style={{ height: HeaderHeight + RowHeight * gridDatas.rows.length }}>
+          <DataGrid
+            rows={gridDatas.rows}
+            columns={gridDatas.columns}
+            autoHeight={true}
+            hideFooter={true}
+          />
         </div>
       )}
     </div>
