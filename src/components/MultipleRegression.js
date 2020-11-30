@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { DataGrid } from "@material-ui/data-grid";
 
 var FileData = null;
-const HeaderHeight = 56;
-const RowHeight = 52;
+const HeaderHeight = 36;
+const RowHeight = 32;
 
 const DataToArraySeparatedNewLine = (data) => {
   return data.split("\n");
@@ -38,19 +38,17 @@ const TakeHeaderFromCsvData = (csvData) => {
 
 const MultipleRegression = () => {
   const [gridDatas, setGridDatas] = useState({
-    columns: [{ field: "id" }, { field: "x1" }, { field: "x2" }, { field: "y" }],
-    rows: [
-      { id: 1, x1: 0, x2: 0, y: 0 },
-      { id: 2, x1: 0, x2: 0, y: 0 },
-      { id: 2, x1: 0, x2: 0, y: 0 },
-    ],
+    columns: [],
+    rows: [],
   });
 
+  const [isFileRead, setFileReadState] = useState(false);
+
   const handleFiles = () => (e) => {
-    console.log("Called handleFiles");
     if (e.target.files.length === 0) {
+      setFileReadState(false);
       FileData = null;
-      setGridDatas({ columns: {}, rows: {} });
+      setGridDatas({ columns: [], rows: [] });
       return;
     }
 
@@ -77,27 +75,31 @@ const MultipleRegression = () => {
       }
       rows[i] = row;
     }
-    console.log(columns);
-    console.log(rows);
     setGridDatas({ columns: columns, rows: rows });
+    setFileReadState(true);
   };
 
-  console.log("render");
-  console.log(gridDatas.columns);
-  console.log(gridDatas.rows);
+  var rowCount = gridDatas.rows.length < 5 ? gridDatas.rows.length : 5;
   return (
     <div>
       重回帰分析
       <p>
-        <input type="file" onChange={handleFiles()} />
+        <input
+          type="file"
+          onChange={handleFiles()}
+          onClick={(e) => {
+            e.target.value = "";
+          }}
+        />
       </p>
-      {FileData !== null && (
-        <div style={{ height: HeaderHeight + RowHeight * gridDatas.rows.length }}>
+      {isFileRead === true && (
+        <div style={{ height: 15 + HeaderHeight + RowHeight * rowCount, width: "100%" }}>
           <DataGrid
             rows={gridDatas.rows}
             columns={gridDatas.columns}
-            autoHeight={true}
             hideFooter={true}
+            rowHeight={RowHeight}
+            headerHeight={HeaderHeight}
           />
         </div>
       )}
