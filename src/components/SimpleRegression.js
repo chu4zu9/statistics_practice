@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Math, CalculateAverage } from "./Math";
+import { Math, CalculateAverage } from "../Math";
 
 const CalculateMultiply = (x, y) => {
   const multi = [];

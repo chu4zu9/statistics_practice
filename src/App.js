@@ -1,7 +1,7 @@
 import "./App.css";
 import React from "react";
-import SimpleRegression from "./SimpleRegression";
-import MultipleRegression from "./MultipleRegression";
+import SimpleRegression from "./components/SimpleRegression";
+import MultipleRegression from "./components/MultipleRegression";
 import { Link, BrowserRouter as Router, Route, Switch } from "react-router-dom";
 
 const App = () => {
