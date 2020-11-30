@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { DataGrid } from "@material-ui/data-grid";
+import { Math } from "../Math";
 
 var FileData = null;
-const HeaderHeight = 36;
+const HeaderHeight = 32;
 const RowHeight = 32;
 
 const DataToArraySeparatedNewLine = (data) => {
@@ -36,6 +37,36 @@ const TakeHeaderFromCsvData = (csvData) => {
   return DataToArraySeparatedComma(DataToArraySeparatedNewLine(csvData)[0]);
 };
 
+const TakeXDataFromCsvData = (csvData) => {
+  return TakeNonIdDataFromCsvData(csvData).map((array) => {
+    array.pop();
+    return array;
+  });
+};
+
+const TakeXDataWithInterceptPartFromCsvData = (csvData) => {
+  return TakeXDataFromCsvData(csvData).map((array) => {
+    array.unshift(1);
+    return array;
+  });
+};
+
+const TakeYDataFromCsvData = (csvData) => {
+  return TakeNonIdDataFromCsvData(csvData).map((array) => {
+    return array[array.length - 1];
+  });
+};
+
+const CalculateCoefficient = (explanatory, response) => {
+  return Math.multiply(
+    Math.multiply(
+      Math.inv(Math.multiply(Math.transpose(Math.matrix(explanatory)), Math.matrix(explanatory))),
+      Math.transpose(Math.matrix(explanatory))
+    ),
+    Math.matrix(response)
+  )._data;
+};
+
 const MultipleRegression = () => {
   const [gridDatas, setGridDatas] = useState({
     columns: [],
@@ -56,6 +87,11 @@ const MultipleRegression = () => {
     reader.onload = () => {
       FileData = reader.result;
       UpdateDataGrid(FileData);
+      var coefficient = CalculateCoefficient(
+        TakeXDataWithInterceptPartFromCsvData(FileData),
+        TakeYDataFromCsvData(FileData)
+      );
+      console.log(coefficient);
     };
 
     reader.readAsText(e.target.files[0]);
