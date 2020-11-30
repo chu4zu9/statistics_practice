@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { DataGrid } from "@material-ui/data-grid";
 import { Math } from "../Math";
 
-var FileData = null;
+let FileData = null;
 const HeaderHeight = 32;
 const RowHeight = 32;
 
@@ -18,7 +18,7 @@ const TakeDataFromCsvData = (csvData) => {
   const separatedByNewLine = DataToArraySeparatedNewLine(csvData);
 
   const result = [];
-  for (var i = 0; i < separatedByNewLine.length; i++) {
+  for (let i = 0; i < separatedByNewLine.length; i++) {
     result[i] = DataToArraySeparatedComma(separatedByNewLine[i]);
   }
   result.shift();
@@ -37,21 +37,21 @@ const TakeHeaderFromCsvData = (csvData) => {
   return DataToArraySeparatedComma(DataToArraySeparatedNewLine(csvData)[0]);
 };
 
-const TakeXDataFromCsvData = (csvData) => {
+const TakeExplanatoryDataFromCsvData = (csvData) => {
   return TakeNonIdDataFromCsvData(csvData).map((array) => {
     array.pop();
     return array;
   });
 };
 
-const TakeXDataWithInterceptPartFromCsvData = (csvData) => {
-  return TakeXDataFromCsvData(csvData).map((array) => {
+const TakeExplanatoryDataWithInterceptPartFromCsvData = (csvData) => {
+  return TakeExplanatoryDataFromCsvData(csvData).map((array) => {
     array.unshift(1);
     return array;
   });
 };
 
-const TakeYDataFromCsvData = (csvData) => {
+const TakeResponseDataFromCsvData = (csvData) => {
   return TakeNonIdDataFromCsvData(csvData).map((array) => {
     return array[array.length - 1];
   });
@@ -65,6 +65,23 @@ const CalculateCoefficient = (explanatory, response) => {
     ),
     Math.matrix(response)
   )._data;
+};
+
+const CalculatePredictedValues = (coefficient, explanatories) => {
+  let predictedValues = [];
+  let sum = 0;
+  for (let i = 0; i < explanatories.length; i++) {
+    for (let j = 0; j < coefficient.length; j++) {
+      sum += coefficient[j] * explanatories[i][j];
+    }
+    predictedValues[i] = sum;
+    sum = 0;
+  }
+  return predictedValues;
+};
+
+const CalculateRSquare = (predictedValues, sampleValues) => {
+  return Math.variance(predictedValues) / Math.variance(sampleValues);
 };
 
 const MultipleRegression = () => {
@@ -83,15 +100,23 @@ const MultipleRegression = () => {
       return;
     }
 
-    var reader = new FileReader();
+    let reader = new FileReader();
     reader.onload = () => {
       FileData = reader.result;
       UpdateDataGrid(FileData);
-      var coefficient = CalculateCoefficient(
-        TakeXDataWithInterceptPartFromCsvData(FileData),
-        TakeYDataFromCsvData(FileData)
+      var coefficients = CalculateCoefficient(
+        TakeExplanatoryDataWithInterceptPartFromCsvData(FileData),
+        TakeResponseDataFromCsvData(FileData)
       );
-      console.log(coefficient);
+
+      const rSquare = CalculateRSquare(
+        CalculatePredictedValues(
+          coefficients,
+          TakeExplanatoryDataWithInterceptPartFromCsvData(FileData)
+        ),
+        TakeResponseDataFromCsvData(FileData)
+      );
+      console.log(rSquare);
     };
 
     reader.readAsText(e.target.files[0]);
@@ -103,9 +128,9 @@ const MultipleRegression = () => {
     });
 
     const rows = [{}];
-    for (var i = 0; i < TakeDataFromCsvData(csvFile).length; i++) {
+    for (let i = 0; i < TakeDataFromCsvData(csvFile).length; i++) {
       const row = {};
-      for (var j = 0; j < TakeHeaderFromCsvData(csvFile).length; j++) {
+      for (let j = 0; j < TakeHeaderFromCsvData(csvFile).length; j++) {
         const key = TakeHeaderFromCsvData(csvFile)[j];
         row[key] = parseInt(TakeDataFromCsvData(csvFile)[i][j]);
       }
@@ -115,13 +140,14 @@ const MultipleRegression = () => {
     setFileReadState(true);
   };
 
-  var rowCount = gridDatas.rows.length < 5 ? gridDatas.rows.length : 5;
+  const rowCount = gridDatas.rows.length < 5 ? gridDatas.rows.length : 5;
   return (
     <div>
       重回帰分析
       <p>
         <input
           type="file"
+          accept=".csv"
           onChange={handleFiles()}
           onClick={(e) => {
             e.target.value = "";
