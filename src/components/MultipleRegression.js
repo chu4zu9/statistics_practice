@@ -1,69 +1,11 @@
 import React, { useState } from "react";
 import { DataGrid } from "@material-ui/data-grid";
 import { Math } from "../Math";
+import CsvFile from "../CsvFile";
 
 let FileData = null;
 const HeaderHeight = 32;
 const RowHeight = 32;
-
-const DataToArraySeparatedNewLine = (data) => {
-  return data.split("\n");
-};
-
-const DataToArraySeparatedComma = (data) => {
-  return data.split(",");
-};
-
-const TakeDataFromCsvData = (csvData) => {
-  const separatedByNewLine = DataToArraySeparatedNewLine(csvData);
-
-  const result = [];
-  for (let i = 0; i < separatedByNewLine.length; i++) {
-    result[i] = DataToArraySeparatedComma(separatedByNewLine[i]);
-  }
-  result.shift();
-
-  return result;
-};
-
-const TakeNonIdDataFromCsvData = (csvData) => {
-  return TakeDataFromCsvData(csvData).map((array) => {
-    array.shift();
-    return array;
-  });
-};
-
-const TakeHeaderFromCsvData = (csvData) => {
-  return DataToArraySeparatedComma(DataToArraySeparatedNewLine(csvData)[0]);
-};
-
-const TakeExplanatoryDataFromCsvData = (csvData) => {
-  return TakeNonIdDataFromCsvData(csvData).map((array) => {
-    array.pop();
-    return array;
-  });
-};
-
-const TakeExplanatoryDataWithInterceptPartFromCsvData = (csvData) => {
-  return TakeExplanatoryDataFromCsvData(csvData).map((array) => {
-    array.unshift(1);
-    return array;
-  });
-};
-
-const TakeResponseDataFromCsvData = (csvData) => {
-  return TakeNonIdDataFromCsvData(csvData).map((array) => {
-    return array[array.length - 1];
-  });
-};
-
-const CountSampleNumber = (csvData) => {
-  return TakeDataFromCsvData(csvData).length;
-};
-
-const CountExplanatoryNumber = (csvData) => {
-  return TakeExplanatoryDataWithInterceptPartFromCsvData(csvData)[0].length;
-};
 
 const CalculateCoefficient = (explanatory, response) => {
   return Math.multiply(
@@ -122,39 +64,33 @@ const MultipleRegression = () => {
 
     let reader = new FileReader();
     reader.onload = () => {
-      FileData = reader.result;
-      UpdateDataGrid(FileData);
+      FileData = new CsvFile(reader.result);
+      UpdateDataGrid();
       var coefficients = CalculateCoefficient(
-        TakeExplanatoryDataWithInterceptPartFromCsvData(FileData),
-        TakeResponseDataFromCsvData(FileData)
+        FileData.ExplanatoryDataWithInterceptPart,
+        FileData.ResponseData
       );
       console.log(coefficients);
 
       const rSquared = CalculateRSquared(
-        CalculatePredictedValues(
-          coefficients,
-          TakeExplanatoryDataWithInterceptPartFromCsvData(FileData)
-        ),
-        TakeResponseDataFromCsvData(FileData)
+        CalculatePredictedValues(coefficients, FileData.ExplanatoryDataWithInterceptPart),
+        FileData.ResponseData
       );
       console.log(rSquared);
 
       const adjustedRSquared = CalculateAdjustedRSquared(
         rSquared,
-        CountSampleNumber(FileData),
-        CountExplanatoryNumber(FileData)
+        FileData.SampleNumber,
+        FileData.ExplanatoryNumber
       );
 
       console.log(adjustedRSquared);
 
       const standardError = CalculateStandardError(
-        TakeResponseDataFromCsvData(FileData),
-        CalculatePredictedValues(
-          coefficients,
-          TakeExplanatoryDataWithInterceptPartFromCsvData(FileData)
-        ),
-        CountSampleNumber(FileData),
-        CountExplanatoryNumber(FileData)
+        FileData.ResponseData,
+        CalculatePredictedValues(coefficients, FileData.ExplanatoryDataWithInterceptPart),
+        FileData.SampleNumber,
+        FileData.ExplanatoryNumber
       );
       console.log(standardError);
     };
@@ -162,17 +98,17 @@ const MultipleRegression = () => {
     reader.readAsText(e.target.files[0]);
   };
 
-  const UpdateDataGrid = (csvFile) => {
-    const columns = TakeHeaderFromCsvData(csvFile).map((value) => {
+  const UpdateDataGrid = () => {
+    const columns = FileData.Header.map((value) => {
       return { field: value };
     });
 
     const rows = [{}];
-    for (let i = 0; i < TakeDataFromCsvData(csvFile).length; i++) {
+    for (let i = 0; i < FileData.Data.length; i++) {
       const row = {};
-      for (let j = 0; j < TakeHeaderFromCsvData(csvFile).length; j++) {
-        const key = TakeHeaderFromCsvData(csvFile)[j];
-        row[key] = parseInt(TakeDataFromCsvData(csvFile)[i][j]);
+      for (let j = 0; j < FileData.Header.length; j++) {
+        const key = FileData.Header[j];
+        row[key] = parseInt(FileData.Data[i][j]);
       }
       rows[i] = row;
     }
@@ -191,6 +127,7 @@ const MultipleRegression = () => {
           onChange={handleFiles()}
           onClick={(e) => {
             e.target.value = "";
+            setFileReadState(false);
           }}
         />
       </p>
