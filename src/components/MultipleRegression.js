@@ -57,6 +57,14 @@ const TakeResponseDataFromCsvData = (csvData) => {
   });
 };
 
+const CountSampleNumber = (csvData) => {
+  return TakeDataFromCsvData(csvData).length;
+};
+
+const CountExplanatoryNumber = (csvData) => {
+  return TakeExplanatoryDataWithInterceptPartFromCsvData(csvData)[0].length;
+};
+
 const CalculateCoefficient = (explanatory, response) => {
   return Math.multiply(
     Math.multiply(
@@ -80,8 +88,12 @@ const CalculatePredictedValues = (coefficient, explanatories) => {
   return predictedValues;
 };
 
-const CalculateRSquare = (predictedValues, sampleValues) => {
+const CalculateRSquared = (predictedValues, sampleValues) => {
   return Math.variance(predictedValues) / Math.variance(sampleValues);
+};
+
+const CalculateAdjustedRSquared = (rSquared, sampleNumber, explanatoryNumber) => {
+  return 1 - (1 - rSquared) * ((sampleNumber - 1) / (sampleNumber - explanatoryNumber));
 };
 
 const MultipleRegression = () => {
@@ -108,15 +120,26 @@ const MultipleRegression = () => {
         TakeExplanatoryDataWithInterceptPartFromCsvData(FileData),
         TakeResponseDataFromCsvData(FileData)
       );
+      console.log(coefficients);
 
-      const rSquare = CalculateRSquare(
+      const rSquared = CalculateRSquared(
         CalculatePredictedValues(
           coefficients,
           TakeExplanatoryDataWithInterceptPartFromCsvData(FileData)
         ),
         TakeResponseDataFromCsvData(FileData)
       );
-      console.log(rSquare);
+      console.log(rSquared);
+
+      const adjustedRSquared = CalculateAdjustedRSquared(
+        rSquared,
+        CountSampleNumber(FileData),
+        CountExplanatoryNumber(FileData)
+      );
+
+      console.log(CountSampleNumber(FileData));
+      console.log(CountExplanatoryNumber(FileData));
+      console.log(adjustedRSquared);
     };
 
     reader.readAsText(e.target.files[0]);
