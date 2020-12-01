@@ -7,11 +7,13 @@ let FileData = null;
 const HeaderHeight = 32;
 const RowHeight = 32;
 
-const CalculateCoefficient = (explanatory, response) => {
+const CalculateCoefficient = (explanatories, response) => {
   return Math.multiply(
     Math.multiply(
-      Math.inv(Math.multiply(Math.transpose(Math.matrix(explanatory)), Math.matrix(explanatory))),
-      Math.transpose(Math.matrix(explanatory))
+      Math.inv(
+        Math.multiply(Math.transpose(Math.matrix(explanatories)), Math.matrix(explanatories))
+      ),
+      Math.transpose(Math.matrix(explanatories))
     ),
     Math.matrix(response)
   )._data;
@@ -38,12 +40,32 @@ const CalculateAdjustedRSquared = (rSquared, sampleNumber, explanatoryNumber) =>
   return 1 - (1 - rSquared) * ((sampleNumber - 1) / (sampleNumber - explanatoryNumber));
 };
 
-const CalculateStandardError = (responses, predictedValues, sampleNumber, explanatoryNumber) => {
+const CalculateUnbiasedVariance = (responses, predictedValues, sampleNumber, explanatoryNumber) => {
   let sumError = 0;
   for (let i = 0; i < responses.length; i++) {
-    sumError += (responses[i] - predictedValues[i]) * (responses[i] - predictedValues[i]);
+    sumError += Math.square(responses[i] - predictedValues[i]);
   }
-  return Math.sqrt(sumError / (sampleNumber - explanatoryNumber));
+  return sumError / (sampleNumber - explanatoryNumber);
+};
+
+const CalculateStandardError = (unbiasedVariance) => {
+  return Math.sqrt(unbiasedVariance);
+};
+
+const CalculateStandardErrorOfCoefficients = (
+  unbiasedVariance,
+  explanatories,
+  explanatoryNumber
+) => {
+  let standardErrorsPerExplanatory = [];
+  for (let i = 0; i < explanatoryNumber; i++) {
+    standardErrorsPerExplanatory[i] = Math.sqrt(
+      Math.inv(
+        Math.multiply(Math.transpose(Math.matrix(explanatories)), Math.matrix(explanatories))
+      )._data[i][i] * unbiasedVariance
+    );
+  }
+  return standardErrorsPerExplanatory;
 };
 
 const MultipleRegression = () => {
@@ -83,16 +105,24 @@ const MultipleRegression = () => {
         FileData.SampleNumber,
         FileData.ExplanatoryNumber
       );
-
       console.log(adjustedRSquared);
 
-      const standardError = CalculateStandardError(
+      const unbiasedVariance = CalculateUnbiasedVariance(
         FileData.ResponseData,
         CalculatePredictedValues(coefficients, FileData.ExplanatoryDataWithInterceptPart),
         FileData.SampleNumber,
         FileData.ExplanatoryNumber
       );
+
+      const standardError = CalculateStandardError(unbiasedVariance);
       console.log(standardError);
+
+      const standardErrorOfCoefficients = CalculateStandardErrorOfCoefficients(
+        unbiasedVariance,
+        FileData.ExplanatoryDataWithInterceptPart,
+        FileData.ExplanatoryNumber
+      );
+      console.log(standardErrorOfCoefficients);
     };
 
     reader.readAsText(e.target.files[0]);
