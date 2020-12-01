@@ -96,6 +96,14 @@ const CalculateAdjustedRSquared = (rSquared, sampleNumber, explanatoryNumber) =>
   return 1 - (1 - rSquared) * ((sampleNumber - 1) / (sampleNumber - explanatoryNumber));
 };
 
+const CalculateStandardError = (responses, predictedValues, sampleNumber, explanatoryNumber) => {
+  let sumError = 0;
+  for (let i = 0; i < responses.length; i++) {
+    sumError += (responses[i] - predictedValues[i]) * (responses[i] - predictedValues[i]);
+  }
+  return Math.sqrt(sumError / (sampleNumber - explanatoryNumber));
+};
+
 const MultipleRegression = () => {
   const [gridDatas, setGridDatas] = useState({
     columns: [],
@@ -137,9 +145,18 @@ const MultipleRegression = () => {
         CountExplanatoryNumber(FileData)
       );
 
-      console.log(CountSampleNumber(FileData));
-      console.log(CountExplanatoryNumber(FileData));
       console.log(adjustedRSquared);
+
+      const standardError = CalculateStandardError(
+        TakeResponseDataFromCsvData(FileData),
+        CalculatePredictedValues(
+          coefficients,
+          TakeExplanatoryDataWithInterceptPartFromCsvData(FileData)
+        ),
+        CountSampleNumber(FileData),
+        CountExplanatoryNumber(FileData)
+      );
+      console.log(standardError);
     };
 
     reader.readAsText(e.target.files[0]);
