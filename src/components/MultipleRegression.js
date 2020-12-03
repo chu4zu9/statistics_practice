@@ -1,5 +1,14 @@
 import React, { useState } from "react";
 import { DataGrid } from "@material-ui/data-grid";
+import Grid from "@material-ui/core/Grid";
+import {
+  Table,
+  TableCell,
+  TableHead,
+  TableRow,
+  TableBody,
+  TableContainer,
+} from "@material-ui/core";
 import { Math } from "../Math";
 import CsvFile from "../CsvFile";
 
@@ -57,15 +66,159 @@ const CalculateStandardErrorOfCoefficients = (
   explanatories,
   explanatoryNumber
 ) => {
-  let standardErrorsPerExplanatory = [];
+  let standardErrorOfCoefficients = [];
   for (let i = 0; i < explanatoryNumber; i++) {
-    standardErrorsPerExplanatory[i] = Math.sqrt(
+    standardErrorOfCoefficients[i] = Math.sqrt(
       Math.inv(
         Math.multiply(Math.transpose(Math.matrix(explanatories)), Math.matrix(explanatories))
       )._data[i][i] * unbiasedVariance
     );
   }
-  return standardErrorsPerExplanatory;
+  return standardErrorOfCoefficients;
+};
+
+const CalculateTValue = (coefficients, standardErrorOfCoefficients) => {
+  let tValue = [];
+  for (let i = 0; i < coefficients.length; i++) {
+    tValue[i] = coefficients[i] / standardErrorOfCoefficients[i];
+  }
+  return tValue;
+};
+
+const InputDatas = (props) => {
+  const rowCount = props.rows.length < 5 ? props.rows.length : 5;
+  return (
+    <div style={{ height: 15 + HeaderHeight + RowHeight * rowCount }}>
+      <DataGrid
+        rows={props.rows}
+        columns={props.columns}
+        hideFooter={true}
+        rowHeight={RowHeight}
+        headerHeight={HeaderHeight}
+      />
+    </div>
+  );
+};
+
+const MultipleRegressionResult = (props) => {
+  var coefficients = CalculateCoefficient(
+    FileData.ExplanatoryDataWithInterceptPart,
+    FileData.ResponseData
+  );
+
+  const rSquared = CalculateRSquared(
+    CalculatePredictedValues(coefficients, FileData.ExplanatoryDataWithInterceptPart),
+    FileData.ResponseData
+  );
+
+  const adjustedRSquared = CalculateAdjustedRSquared(
+    rSquared,
+    FileData.SampleNumber,
+    FileData.ExplanatoryNumber
+  );
+
+  const unbiasedVariance = CalculateUnbiasedVariance(
+    FileData.ResponseData,
+    CalculatePredictedValues(coefficients, FileData.ExplanatoryDataWithInterceptPart),
+    FileData.SampleNumber,
+    FileData.ExplanatoryNumber
+  );
+
+  const standardError = CalculateStandardError(unbiasedVariance);
+
+  const standardErrorOfCoefficients = CalculateStandardErrorOfCoefficients(
+    unbiasedVariance,
+    FileData.ExplanatoryDataWithInterceptPart,
+    FileData.ExplanatoryNumber
+  );
+
+  const tValue = CalculateTValue(coefficients, standardErrorOfCoefficients);
+
+  const createRegressionStatistics = (name, value) => {
+    return { name, value };
+  };
+
+  let regressionStatistics = [
+    createRegressionStatistics("決定係数 R^2", rSquared),
+    createRegressionStatistics("補正 R^2", adjustedRSquared),
+    createRegressionStatistics("標準誤差", standardError),
+    createRegressionStatistics("データ数", FileData.SampleNumber),
+  ];
+
+  const createOtherData = (name, coefficient, standardErrorOfCoefficient, tValue) => {
+    return { name, coefficient, standardErrorOfCoefficient, tValue };
+  };
+
+  let otherStatistics = [
+    createOtherData("切片", coefficients[0], standardErrorOfCoefficients[0], tValue[0]),
+  ];
+  for (let i = 1; i < coefficients.length; i++) {
+    otherStatistics[i] = createOtherData(
+      props.columns[i].field,
+      coefficients[i],
+      standardErrorOfCoefficients[i],
+      tValue[i]
+    );
+  }
+
+  return (
+    <div>
+      <Grid container direction="column" spacing={3}>
+        <Grid container spacing={3}>
+          <Grid item xs></Grid>
+          <Grid item xs={8}>
+            <TableContainer>
+              <Table size="small" aria-label="a dense table">
+                <TableHead>
+                  <TableRow>
+                    <TableCell></TableCell>
+                    <TableCell>回帰統計</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {regressionStatistics.map((row) => (
+                    <TableRow key={row.name}>
+                      <TableCell component="th" scope="row">
+                        {row.name}
+                      </TableCell>
+                      <TableCell align="right">{row.value}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Grid>
+          <Grid item xs></Grid>
+        </Grid>
+        <Grid item xs>
+          <TableContainer>
+            <Table size="small" aria-label="a dense table">
+              <TableHead>
+                <TableRow>
+                  <TableCell></TableCell>
+                  <TableCell align="center">係数</TableCell>
+                  <TableCell align="center">標準誤差</TableCell>
+                  <TableCell align="center">t値</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {otherStatistics.map((row) => (
+                  <TableRow key={row.name}>
+                    <TableCell component="th" scope="row">
+                      {row.name}
+                    </TableCell>
+                    <TableCell align="right">{row.coefficient}</TableCell>
+                    <TableCell align="right">{row.standardErrorOfCoefficient}</TableCell>
+                    <TableCell align="right">{row.tValue}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Grid>
+      </Grid>
+    </div>
+  );
 };
 
 const MultipleRegression = () => {
@@ -88,41 +241,6 @@ const MultipleRegression = () => {
     reader.onload = () => {
       FileData = new CsvFile(reader.result);
       UpdateDataGrid();
-      var coefficients = CalculateCoefficient(
-        FileData.ExplanatoryDataWithInterceptPart,
-        FileData.ResponseData
-      );
-      console.log(coefficients);
-
-      const rSquared = CalculateRSquared(
-        CalculatePredictedValues(coefficients, FileData.ExplanatoryDataWithInterceptPart),
-        FileData.ResponseData
-      );
-      console.log(rSquared);
-
-      const adjustedRSquared = CalculateAdjustedRSquared(
-        rSquared,
-        FileData.SampleNumber,
-        FileData.ExplanatoryNumber
-      );
-      console.log(adjustedRSquared);
-
-      const unbiasedVariance = CalculateUnbiasedVariance(
-        FileData.ResponseData,
-        CalculatePredictedValues(coefficients, FileData.ExplanatoryDataWithInterceptPart),
-        FileData.SampleNumber,
-        FileData.ExplanatoryNumber
-      );
-
-      const standardError = CalculateStandardError(unbiasedVariance);
-      console.log(standardError);
-
-      const standardErrorOfCoefficients = CalculateStandardErrorOfCoefficients(
-        unbiasedVariance,
-        FileData.ExplanatoryDataWithInterceptPart,
-        FileData.ExplanatoryNumber
-      );
-      console.log(standardErrorOfCoefficients);
     };
 
     reader.readAsText(e.target.files[0]);
@@ -146,32 +264,34 @@ const MultipleRegression = () => {
     setFileReadState(true);
   };
 
-  const rowCount = gridDatas.rows.length < 5 ? gridDatas.rows.length : 5;
   return (
     <div>
-      重回帰分析
-      <p>
-        <input
-          type="file"
-          accept=".csv"
-          onChange={handleFiles()}
-          onClick={(e) => {
-            e.target.value = "";
-            setFileReadState(false);
-          }}
-        />
-      </p>
-      {isFileRead === true && (
-        <div style={{ height: 15 + HeaderHeight + RowHeight * rowCount, width: "100%" }}>
-          <DataGrid
-            rows={gridDatas.rows}
-            columns={gridDatas.columns}
-            hideFooter={true}
-            rowHeight={RowHeight}
-            headerHeight={HeaderHeight}
+      <Grid container direction="column" alignItems="center" spacing={3}>
+        <Grid item xs>
+          重回帰分析
+        </Grid>
+        <Grid item xs>
+          <input
+            type="file"
+            accept=".csv"
+            onChange={handleFiles()}
+            onClick={(e) => {
+              e.target.value = "";
+              setFileReadState(false);
+            }}
           />
-        </div>
-      )}
+        </Grid>
+        {isFileRead === true && (
+          <div>
+            <Grid item xs>
+              <InputDatas columns={gridDatas.columns} rows={gridDatas.rows} />
+            </Grid>
+            <Grid item xs>
+              <MultipleRegressionResult columns={gridDatas.columns} />
+            </Grid>
+          </div>
+        )}
+      </Grid>
     </div>
   );
 };
