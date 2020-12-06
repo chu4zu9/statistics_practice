@@ -1,3 +1,5 @@
+import { CalculateAverage, CalculateStandardDeviation } from "./Math";
+
 const DataToArraySeparatedNewLine = (data) => {
   return data.split("\n");
 };
@@ -61,5 +63,22 @@ export default class CsvFile {
 
   get ExplanatoryNumber() {
     return this.ExplanatoryDataWithInterceptPart[0].length;
+  }
+
+  get NormalizedData() {
+    let normalizedData = this.Data;
+    for (let i = 1; i < this.Data[0].length; i++) {
+      let tempList = [];
+      for (let j = 0; j < this.SampleNumber; j++) {
+        tempList[j] = this.Data[j][i];
+      }
+      let average = CalculateAverage(tempList);
+      let standardDeviation = CalculateStandardDeviation(tempList);
+      for (let j = 0; j < this.SampleNumber; j++) {
+        normalizedData[j][i] = (this.Data[j][i] - average) / standardDeviation;
+      }
+    }
+
+    return normalizedData;
   }
 }

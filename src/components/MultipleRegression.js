@@ -240,6 +240,7 @@ const MultipleRegression = () => {
     let reader = new FileReader();
     reader.onload = () => {
       FileData = new CsvFile(reader.result);
+      console.log(FileData.NormalizedData);
       UpdateDataGrid();
     };
 
@@ -256,7 +257,7 @@ const MultipleRegression = () => {
       const row = {};
       for (let j = 0; j < FileData.Header.length; j++) {
         const key = FileData.Header[j];
-        row[key] = parseInt(FileData.Data[i][j]);
+        row[key] = parseFloat(FileData.Data[i][j]);
       }
       rows[i] = row;
     }
@@ -268,7 +269,7 @@ const MultipleRegression = () => {
     <div>
       <Grid container direction="column" alignItems="center" spacing={3}>
         <Grid item xs>
-          重回帰分析
+          <h1>重回帰分析</h1>
         </Grid>
         <Grid item xs>
           <input
@@ -281,16 +282,19 @@ const MultipleRegression = () => {
             }}
           />
         </Grid>
-        {isFileRead === true && (
-          <div>
-            <Grid item xs>
-              <InputDatas columns={gridDatas.columns} rows={gridDatas.rows} />
-            </Grid>
-            <Grid item xs>
-              <MultipleRegressionResult columns={gridDatas.columns} />
-            </Grid>
-          </div>
-        )}
+
+        <div>
+          {isFileRead === true && (
+            <div>
+              <Grid item xs>
+                <InputDatas columns={gridDatas.columns} rows={gridDatas.rows} />
+              </Grid>
+              <Grid item xs>
+                <MultipleRegressionResult columns={gridDatas.columns} />
+              </Grid>
+            </div>
+          )}
+        </div>
       </Grid>
     </div>
   );
