@@ -8,7 +8,7 @@ const DataToArraySeparatedComma = (data) => {
   return data.split(",");
 };
 
-export default class CsvFile {
+export class CsvFile {
   #FileData;
   constructor(fileData) {
     this.FileData = fileData;
@@ -82,3 +82,7 @@ export default class CsvFile {
     return normalizedData;
   }
 }
+
+export const ArrayToCsvString = (data) => {
+  return data.map((record) => record.map((field) => field).join(",")).join("\n");
+};

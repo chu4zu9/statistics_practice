@@ -11,7 +11,7 @@ import {
 } from "@material-ui/core";
 import Paper from "@material-ui/core/Paper";
 import { Math } from "../Math";
-import CsvFile from "../CsvFile";
+import { CsvFile, ArrayToCsvString } from "../CsvFile";
 
 let FileData = null;
 const HeaderHeight = 32;
@@ -230,6 +230,17 @@ const MultipleRegression = () => {
 
   const [isFileRead, setFileReadState] = useState(false);
 
+  const normalize = () => {
+    var array = [];
+    array[0] = FileData.Header;
+    for (var i = 0; i < FileData.NormalizedData.length; i++) {
+      array[i + 1] = FileData.NormalizedData[i];
+    }
+
+    FileData = new CsvFile(ArrayToCsvString(array));
+    UpdateDataGrid();
+  };
+
   const handleFiles = () => (e) => {
     if (e.target.files.length === 0) {
       setFileReadState(false);
@@ -241,7 +252,7 @@ const MultipleRegression = () => {
     let reader = new FileReader();
     reader.onload = () => {
       FileData = new CsvFile(reader.result);
-      console.log(FileData.NormalizedData);
+
       UpdateDataGrid();
     };
 
@@ -282,6 +293,9 @@ const MultipleRegression = () => {
               setFileReadState(false);
             }}
           />
+        </Grid>
+        <Grid item xs>
+          <button onClick={() => normalize()}>正規化する</button>
         </Grid>
         {isFileRead === true && (
           <Grid item xs container>
