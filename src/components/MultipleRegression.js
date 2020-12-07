@@ -9,6 +9,7 @@ import {
   TableBody,
   TableContainer,
 } from "@material-ui/core";
+import Paper from "@material-ui/core/Paper";
 import { Math } from "../Math";
 import CsvFile from "../CsvFile";
 
@@ -167,7 +168,7 @@ const MultipleRegressionResult = (props) => {
         <Grid container spacing={3}>
           <Grid item xs></Grid>
           <Grid item xs={8}>
-            <TableContainer>
+            <TableContainer component={Paper}>
               <Table size="small" aria-label="a dense table">
                 <TableHead>
                   <TableRow>
@@ -191,7 +192,7 @@ const MultipleRegressionResult = (props) => {
           <Grid item xs></Grid>
         </Grid>
         <Grid item xs>
-          <TableContainer>
+          <TableContainer component={Paper}>
             <Table size="small" aria-label="a dense table">
               <TableHead>
                 <TableRow>
@@ -267,9 +268,9 @@ const MultipleRegression = () => {
 
   return (
     <div>
-      <Grid container direction="column" alignItems="center" spacing={3}>
+      <Grid container direction="column" justify="space-evenly" alignItems="center" spacing={3}>
         <Grid item xs>
-          <h1>重回帰分析</h1>
+          <h2>重回帰分析</h2>
         </Grid>
         <Grid item xs>
           <input
@@ -282,19 +283,20 @@ const MultipleRegression = () => {
             }}
           />
         </Grid>
-
-        <div>
-          {isFileRead === true && (
-            <div>
-              <Grid item xs>
-                <InputDatas columns={gridDatas.columns} rows={gridDatas.rows} />
-              </Grid>
-              <Grid item xs>
-                <MultipleRegressionResult columns={gridDatas.columns} />
-              </Grid>
-            </div>
-          )}
-        </div>
+        {isFileRead === true && (
+          <Grid item xs container>
+            <Grid item xs></Grid>
+            <Grid item xs={6}>
+              <InputDatas columns={gridDatas.columns} rows={gridDatas.rows} />
+            </Grid>
+            <Grid item xs></Grid>
+          </Grid>
+        )}
+        {isFileRead === true && (
+          <Grid item xs>
+            <MultipleRegressionResult columns={gridDatas.columns} />
+          </Grid>
+        )}
       </Grid>
     </div>
   );
